@@ -1,0 +1,2791 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+*************************************************
+	         AnyLogic Project File
+*************************************************
+-->
+<AnyLogicWorkspace WorkspaceVersion="1.9" AnyLogicVersion="8.9.6.202509050523" AlpVersion="8.9.6">
+<Model>
+	<Id>1762856276445</Id>
+	<Name><![CDATA[CriminalidadOaxacaVallesC3]]></Name>
+	<EngineVersion>6</EngineVersion>
+	<JavaPackageName><![CDATA[criminalidadoaxacavallesc]]></JavaPackageName>
+	<ModelTimeUnit><![CDATA[Day]]></ModelTimeUnit>
+	<Folders>
+	</Folders>
+	<ActiveObjectClasses>
+		<!--   =========   Active Object Class   ========  -->
+		<ActiveObjectClass>
+			<Id>1762856276607</Id>
+			<Name><![CDATA[Main]]></Name>
+			<Import><![CDATA[import com.anylogic.engine.database.*;
+import com.querydsl.core.Tuple;
+import java.util.ArrayList;
+import java.awt.Color;]]></Import>
+			<StartupCode><![CDATA[// Mostrar solo el primer gráfico al inicio
+plot.setVisible(false);            // TimePlot mensual
+timePlotCuando.setVisible(false); // TimePlot CUANDO
+histDelitosChart.setVisible(false); // Histograma
+
+// Seleccionar la primera opción del combo (TimePlot mensual)
+comboGraficos.setValueIndex(0);   // índice 0 = "TimePlot mensual"
+
+// 1. Buscar el centro
+int idxCentro = -1;
+for (int i = 0; i < municipios.size(); i++) {
+    if (municipios.get(i).nombre.equalsIgnoreCase("oaxaca de juarez")) {
+        idxCentro = i;
+        break;
+    }
+}
+
+Municipio centro;
+if (idxCentro >= 0) {
+    centro = municipios.get(idxCentro);
+} else {
+    centro = municipios.get(0);
+}
+
+// 2. Configuración del espacio
+double cx = 1050;   
+double cy = 350;   
+centro.setXYZ(cx, cy, 0);
+
+
+double radioBaseX  = 300;  
+double radioBaseY  = 220;  
+double zigZagExtra = 60;   
+
+
+int totalRing = municipios.size() - 1;
+int k = 0; 
+
+for (int i = 0; i < municipios.size(); i++) {
+    if (municipios.get(i) == centro) continue; 
+
+    double angle = 2 * PI * k / totalRing;
+
+    double rx = (k % 2 == 0) ? radioBaseX : radioBaseX + zigZagExtra;
+    double ry = (k % 2 == 0) ? radioBaseY : radioBaseY + zigZagExtra;
+
+    municipios.get(i).setXYZ(
+        cx + rx * cos(angle),
+        cy + ry * sin(angle),
+        0
+    );
+    k++;
+}
+
+construccionred();
+cargarPoblacionMunicipios();
+for (Municipio m : municipios) {
+    traceln(m.nombre + " pobl=" + m.poblacion2020);
+}
+
+analizarSubtipos();
+indiceMesActual = 0;   
+actualizarPeriodoDesdeIndice(); 
+cargarDelitos();                 
+actualizarColoresMapa();   
+]]></StartupCode>
+			<Generic>false</Generic>
+			<GenericParameter>
+				<Id>1762856276623</Id>
+				<Name><![CDATA[1762856276623]]></Name>
+				<GenericParameterValue Class="CodeValue">
+					<Code><![CDATA[T extends Agent]]></Code>
+				</GenericParameterValue>
+				<GenericParameterLabel><![CDATA[Generic parameter:]]></GenericParameterLabel>
+			</GenericParameter>
+			<FlowChartsUsage>ENTITY</FlowChartsUsage>
+			<SamplesToKeep>100</SamplesToKeep>
+			<LimitNumberOfArrayElements>false</LimitNumberOfArrayElements>
+			<ElementsLimitValue>100</ElementsLimitValue>
+			<MakeDefaultViewArea>true</MakeDefaultViewArea>
+			<SceneGridColor/>
+			<SceneBackgroundColor>-4144960</SceneBackgroundColor>
+			<SceneSkybox>null</SceneSkybox>
+			<AgentProperties>
+				<EnvironmentDefinesInitialLocation>true</EnvironmentDefinesInitialLocation>
+				<RotateAnimationTowardsMovement>true</RotateAnimationTowardsMovement>
+				<RotateAnimationVertically>false</RotateAnimationVertically>
+				<VelocityCode Class="CodeUnitValue">
+					<Code><![CDATA[10]]></Code>
+					<Unit Class="SpeedUnits"><![CDATA[MPS]]></Unit>
+				</VelocityCode>
+				<PhysicalLength Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalLength>
+				<PhysicalWidth Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalWidth>
+				<PhysicalHeight Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalHeight>
+			</AgentProperties>
+			<EnvironmentProperties>
+					<EnableSteps>false</EnableSteps>
+					<StepDurationCode Class="CodeUnitValue">
+						<Code><![CDATA[1.0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</StepDurationCode>
+					<SpaceType>CONTINUOUS</SpaceType>
+					<WidthCode><![CDATA[500]]></WidthCode>
+					<HeightCode><![CDATA[500]]></HeightCode>
+					<ZHeightCode><![CDATA[0]]></ZHeightCode>
+					<ColumnsCountCode><![CDATA[100]]></ColumnsCountCode>
+					<RowsCountCode><![CDATA[100]]></RowsCountCode>
+					<NeigborhoodType>MOORE</NeigborhoodType>
+					<LayoutType>USER_DEF</LayoutType>
+					<NetworkType>USER_DEF</NetworkType>
+					<ConnectionsPerAgentCode><![CDATA[2]]></ConnectionsPerAgentCode>
+					<ConnectionsRangeCode><![CDATA[50]]></ConnectionsRangeCode>
+					<NeighborLinkFractionCode><![CDATA[0.95]]></NeighborLinkFractionCode>
+					<MCode><![CDATA[10]]></MCode>
+			</EnvironmentProperties>
+			<DatasetsCreationProperties>
+				<AutoCreate>true</AutoCreate>
+					<Id>1762856276606</Id>
+					<OccurrenceAtTime>true</OccurrenceAtTime>
+					<OccurrenceDate>1762934400000</OccurrenceDate>
+					<OccurrenceTime Class="CodeUnitValue">
+						<Code><![CDATA[0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+					</OccurrenceTime>
+					<RecurrenceCode Class="CodeUnitValue">
+						<Code><![CDATA[1]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+					</RecurrenceCode>
+			</DatasetsCreationProperties>
+			<ScaleRuler>
+				<Id>1762856276621</Id>
+				<Name><![CDATA[scale]]></Name>
+				<X>0</X><Y>-150</Y>
+				<PublicFlag>false</PublicFlag>
+				<PresentationFlag>false</PresentationFlag>
+				<ShowLabel>false</ShowLabel>
+				<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+				<Length>100</Length>
+				<Rotation>0</Rotation>
+				<ScaleType>BASED_ON_LENGTH</ScaleType>
+				<ModelLength>10</ModelLength>
+				<LengthUnits>METER</LengthUnits>
+				<Scale>10</Scale>
+				<InheritedFromParentAgentType>true</InheritedFromParentAgentType>
+			</ScaleRuler>
+			<CurrentLevel>1762856276626</CurrentLevel>
+			<ConnectionsId>1762856276609</ConnectionsId>
+			<Variables>
+				<Variable Class="PlainVariable">
+					<Id>1764141145139</Id>
+					<Name><![CDATA[periodoActual]]></Name>
+					<X>-770</X><Y>-570</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764589477295</Id>
+					<Name><![CDATA[indiceMesActual]]></Name>
+					<X>-770</X><Y>-610</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764614085218</Id>
+					<Name><![CDATA[mesActual]]></Name>
+					<X>-770</X><Y>-650</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[1]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764704103694</Id>
+					<Name><![CDATA[totalMeses]]></Name>
+					<X>-900</X><Y>-660</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764732013898</Id>
+					<Name><![CDATA[animacionPausada]]></Name>
+					<X>-880</X><Y>-300</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[boolean]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[false
+]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764732055733</Id>
+					<Name><![CDATA[duracionPausaFoco]]></Name>
+					<X>-880</X><Y>-250</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[double]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[1.0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764744353719</Id>
+					<Name><![CDATA[subtiposPermitidos]]></Name>
+					<X>-930</X><Y>-450</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[String[]]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[new String[]{
+    "violencia familiar",
+    "lesiones dolosas",
+    "homicidio doloso"
+}
+]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764744427912</Id>
+					<Name><![CDATA[subtipoSeleccionado]]></Name>
+					<X>-930</X><Y>-490</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[String]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA["violencia familiar"]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764748314182</Id>
+					<Name><![CDATA[delitosSimulados]]></Name>
+					<X>-950</X><Y>-570</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[ArrayList<DelitoSimulado>]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[new ArrayList<DelitoSimulado>()
+]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764875877704</Id>
+					<Name><![CDATA[primerAnioDatos]]></Name>
+					<X>-1060</X><Y>-660</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[2015]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764875892217</Id>
+					<Name><![CDATA[ultimoAnioDatos]]></Name>
+					<X>-1080</X><Y>-760</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[2025]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764878402808</Id>
+					<Name><![CDATA[primerAnioPromedio]]></Name>
+					<X>-1080</X><Y>-720</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[2020]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1765046020159</Id>
+					<Name><![CDATA[graficoSeleccionado]]></Name>
+					<X>-930</X><Y>-380</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[String]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA["TimePlot mensual"]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+			</Variables>
+			<Events>
+				<Event>
+					<Id>1764661070550</Id>
+					<Name><![CDATA[eventoAvanzarPeriodo]]></Name>
+					<X>-730</X><Y>-330</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties TriggerType="timeout" Mode="cyclic">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</Timeout>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_DAY]]></Unit>
+						</Rate>
+						<Id>1764661070548</Id>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1764662400000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[MONTH]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</RecurrenceCode>
+						<Condition><![CDATA[false]]></Condition>
+					</Properties>
+					<Action><![CDATA[// eventoAvanzarPeriodo - Action
+
+// Si la animación está pausada, no avanzamos
+if (animacionPausada)
+    return;
+
+// 1) Avanzar el índice maestro 
+indiceMesActual++;
+
+
+// 3) Recalcular año y mes a partir del índice
+actualizarPeriodoDesdeIndice();  // actualiza periodoActual y mesActual
+
+// DEBUG para verificar que sí cambia
+traceln("DEBUG tiempo -> indiceMesActual=" + indiceMesActual 
+        + "  periodoActual=" + periodoActual 
+        + "  mesActual=" + mesActual);
+
+// 4) Recalcular datos
+cargarDelitos();
+
+// 5) Recolorear el mapa según las tasas del periodo actual
+actualizarColoresMapa();
+
+// === Simulación estocástica: generar delitos con Poisson usando lambdaMes ===
+int totalDelitosMes = 0;
+// NUEVOS acumuladores para el segundo Time Plot
+int delitosOaxacaMes  = 0;
+int delitosXoxoMes    = 0;
+
+for (Municipio m : municipios) {
+
+    if (m.lambdaMes <= 0)
+        continue;  // en este municipio no esperamos delitos este mes
+
+    int n = poisson(m.lambdaMes);   // número de delitos simulados este mes en este municipio
+    totalDelitosMes += n;
+     // Acumular por municipio específico para el segundo gráfico
+    if (m.nombre.equalsIgnoreCase("oaxaca de juarez")) {
+        delitosOaxacaMes += n;
+    }
+    if (m.nombre.equalsIgnoreCase("santa cruz xoxocotlan")) {
+        delitosXoxoMes += n;
+    }
+
+    for (int i = 0; i < n; i++) {
+        DelitoSimulado d = new DelitoSimulado();
+        d.subtipo    = subtipoSeleccionado;
+        d.municipio  = m;
+        d.anio       = periodoActual;
+        d.mes        = mesActual;
+        d.tiempoSim  = time();
+        delitosSimulados.add(d);
+    }
+}
+traceln("Delitos  en " + periodoActual + "-" + mesActual + 
+        " (subtipo " + subtipoSeleccionado + "): " + totalDelitosMes);
+        histDelitos.add(totalDelitosMes);
+// Primer Time Plot: total de delitos simulados por mes
+dsDelitosMensuales.add( time(), totalDelitosMes );
+// Segundo Time Plot: por municipio
+dsCuandoOaxaca.add( time(), delitosOaxacaMes );
+dsCuandoXoxo.add( time(), delitosXoxoMes );]]></Action>
+				</Event>
+				<Event>
+					<Id>1764732131895</Id>
+					<Name><![CDATA[eventoReanudarAnimacion]]></Name>
+					<X>-720</X><Y>-280</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties TriggerType="timeout" Mode="occuresOnce">
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</Timeout>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_DAY]]></Unit>
+						</Rate>
+						<Id>1764732131893</Id>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1764748800000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</RecurrenceCode>
+						<Condition><![CDATA[false]]></Condition>
+					</Properties>
+					<Action><![CDATA[animacionPausada = false;
+]]></Action>
+				</Event>
+			</Events>
+			<Functions>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[Municipio]]></ReturnType>
+					<Id>1763887647667</Id>
+					<Name><![CDATA[buscarMunicipio]]></Name>
+					<X>40</X><Y>170</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[nombre]]></Name>
+						<Type><![CDATA[String]]></Type>
+					</Parameter>
+					<Body><![CDATA[if ( nombre == null ) return null;
+
+String buscado = nombre.trim();
+
+for (Municipio m : municipios) {
+    if (m.nombre != null && m.nombre.trim().equalsIgnoreCase(buscado)) {
+        return m;
+    }
+}
+return null;
+
+]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[void
+]]></ReturnType>
+					<Id>1763887791548</Id>
+					<Name><![CDATA[construccionred]]></Name>
+					<X>60</X><Y>220</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[// 1) Limpiar conexiones anteriores (por si corres el modelo varias veces)
+for( Municipio m : municipios ) {
+    m.disconnectFromAll();
+}
+
+// 2) Leer TODAS las filas de la tabla construccion
+List<Tuple> filas = selectFrom( construccion ).list();
+
+// 3) Recorrer cada fila y conectar origen–destino
+for( Tuple t : filas ) {
+
+    String origenNombre  = t.get( construccion.origen );
+    String destinoNombre = t.get( construccion.destino );
+
+    Municipio origen  = buscarMunicipio( origenNombre );
+    Municipio destino = buscarMunicipio( destinoNombre );
+
+    if( origen == null || destino == null ) {
+        // Si algún nombre no coincide, lo ignoramos para no romper nada
+        continue;
+    }
+    if( origen == destino ) continue;
+
+    // Crear la arista en la red
+    origen.connectTo( destino );
+}
+
+int totalEnlaces = 0;
+
+for (Municipio m : municipios) {
+    totalEnlaces += m.getConnections().size();
+}
+
+traceln("TOTAL ENLACES EN LA RED: " + totalEnlaces);
+
+
+
+
+]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1763925425465</Id>
+					<Name><![CDATA[construccionredFoco]]></Name>
+					<X>-760</X><Y>-440</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[foco]]></Name>
+						<Type><![CDATA[Municipio]]></Type>
+					</Parameter>
+					<Body><![CDATA[ // 1) Colorear todo el mapa según la tasaActual
+    actualizarColoresMapa();
+
+    // 2) Si no hay foco, terminamos
+    if (foco == null) return;
+
+    // 3) Resaltar foco
+    foco.rect.setLineWidth(3);
+    foco.rect.setLineColor( Color.BLACK );
+
+    // 4) Resaltar vecinos
+    for (Agent a : foco.getConnections()) {
+
+        if ( !(a instanceof Municipio) ) continue;
+
+        Municipio vecino = (Municipio) a;
+
+        vecino.rect.setLineWidth(2);
+        vecino.rect.setLineColor( new Color(0, 0, 0, 180) );
+    }]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1763944894307</Id>
+					<Name><![CDATA[cargarDelitos]]></Name>
+					<X>40</X><Y>130</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[traceln("=== INICIO cargarDelitos ===");
+
+// 1) Resetear valores de todos los municipios
+for (Municipio m : municipios) {
+    m.casosActuales = 0;
+    m.tasaActual    = 0;
+    m.lambdaMes     = 0;
+}
+
+// 2) Año y mes del modelo
+int anioModelo = periodoActual;  
+int mesFiltro  = mesActual; 
+
+int filasRevisadas = 0;
+int filasMesAnio   = 0;
+
+List<Tuple> filas = selectFrom(datospoblacion).list();
+
+// === Elegir lógica según año del modelo ===
+if (anioModelo < ultimoAnioDatos || (anioModelo == ultimoAnioDatos && mesFiltro <= 9)) {
+
+    //CASO A1: años con datos mensuales directos
+    //  - 2015–2024 (todos los meses)
+    //  - 2025 de enero a septiembre
+    int anioBase = anioModelo;
+
+    traceln("Filtrando añoModelo = " + anioModelo + ", mes = " + mesFiltro +
+            "  (usando datos directos de añoBase = " + anioBase + ")");
+
+    for (Tuple t : filas) {
+        filasRevisadas++;
+
+        Integer anio   = t.get(datospoblacion.periodo);
+        Integer mes    = t.get(datospoblacion.mes);
+        String muniNom = t.get(datospoblacion.municipio_norm);
+        Double tasa    = t.get(datospoblacion.tasa_100k);
+        String subt    = t.get(datospoblacion.subtipo_de_delito);
+
+        if (anio == null || mes == null || muniNom == null || tasa == null || subt == null)
+            continue;
+
+        // Filtro por año exacto, mes y subtipo seleccionado
+        if (!anio.equals(anioBase) || !mes.equals(mesFiltro))
+            continue;
+
+        if (!subt.equalsIgnoreCase(subtipoSeleccionado))
+            continue;
+
+        filasMesAnio++;
+
+        Municipio m = buscarMunicipio( muniNom );
+        if (m == null) continue;
+
+        // acumulamos tasa para este municipio
+        m.tasaActual += tasa;
+    }
+
+} else if (anioModelo == ultimoAnioDatos && mesFiltro >= 10 && mesFiltro <= 12) {
+
+    // CASO A2: 2025-10, 2025-11 y 2025-12
+    // Usar PROMEDIO de tasas de ENE–SEP 2025 para cada municipio
+
+    traceln("Filtrando añoModelo = " + anioModelo + ", mes = " + mesFiltro +
+            "  (usando PROMEDIO ENE–SEP " + ultimoAnioDatos + ")");
+
+    // Recorremos solo filas de 2025, meses 1..9, subtipo seleccionado
+    for (Tuple t : filas) {
+        filasRevisadas++;
+
+        Integer anio   = t.get(datospoblacion.periodo);
+        Integer mes    = t.get(datospoblacion.mes);
+        String muniNom = t.get(datospoblacion.municipio_norm);
+        Double tasa    = t.get(datospoblacion.tasa_100k);
+        String subt    = t.get(datospoblacion.subtipo_de_delito);
+
+        if (anio == null || mes == null || muniNom == null || tasa == null || subt == null)
+            continue;
+
+        // Solo 2025, meses 1..9
+        if (!anio.equals(ultimoAnioDatos))
+            continue;
+
+        if (mes < 1 || mes > 9)
+            continue;
+
+        if (!subt.equalsIgnoreCase(subtipoSeleccionado))
+            continue;
+
+        filasMesAnio++;
+
+        Municipio m = buscarMunicipio( muniNom );
+        if (m == null) continue;
+
+        // Sumamos las tasas de ENE–SEP
+        m.tasaActual += tasa;
+    }
+
+    // Ahora convertimos la suma ENE–SEP en PROMEDIO mensual
+    double numMesesProm = 9.0;  // enero a septiembre
+    for (Municipio m : municipios) {
+        m.tasaActual = m.tasaActual / numMesesProm;
+    }
+
+} else {
+
+    // CASO B: modelo después del último año de datos → usar PROMEDIO 2020–2025 por mes
+
+    int nAnios = ultimoAnioDatos - primerAnioPromedio + 1;  // 2020–2025 → 6 años
+
+    traceln("Filtrando añoModelo = " + anioModelo + ", mes = " + mesFiltro +
+            "  (usando PROMEDIO de años " + primerAnioPromedio + "–" + ultimoAnioDatos + ")");
+
+    for (Tuple t : filas) {
+        filasRevisadas++;
+
+        Integer anio   = t.get(datospoblacion.periodo);
+        Integer mes    = t.get(datospoblacion.mes);
+        String muniNom = t.get(datospoblacion.municipio_norm);
+        Double tasa    = t.get(datospoblacion.tasa_100k);
+        String subt    = t.get(datospoblacion.subtipo_de_delito);
+
+        if (anio == null || mes == null || muniNom == null || tasa == null || subt == null)
+            continue;
+
+        // Solo consideramos años dentro del rango 2020–2025
+        if (anio < primerAnioPromedio || anio > ultimoAnioDatos)
+            continue;
+
+        // Mes y subtipo deben coincidir
+        if (!mes.equals(mesFiltro))
+            continue;
+
+        if (!subt.equalsIgnoreCase(subtipoSeleccionado))
+            continue;
+
+        filasMesAnio++;
+
+        Municipio m = buscarMunicipio( muniNom );
+        if (m == null) continue;
+
+        // Construimos el PROMEDIO anual: suma( tasa / nAnios )
+        m.tasaActual += tasa / nAnios;
+    }
+}
+
+
+
+traceln("Filas revisadas   : " + filasRevisadas);
+traceln("Filas del mes/año : " + filasMesAnio);
+
+traceln("---- RESUMEN tasaActual POR MUNICIPIO ----");
+for (Municipio m : municipios) {
+    traceln(m.nombre + "  ->  tasaActual = " + m.tasaActual);
+}
+
+traceln("---- RESUMEN tasaActual POR MUNICIPIO ----");
+for (Municipio m : municipios) {
+    traceln(m.nombre + "  ->  tasaActual = " + m.tasaActual);
+}
+
+// === Convertir tasaActual en lambda del mes ===
+traceln("---- LAMBDA MENSUAL POR MUNICIPIO (subtipo " + subtipoSeleccionado + ") ----");
+for (Municipio m : municipios) {
+    m.lambdaMes = (m.tasaActual / 100000.0) * m.poblacion2020;
+    traceln(m.nombre + "  ->  lambdaMes = " + m.lambdaMes);
+}
+
+traceln("=== FIN cargarDelitos ===");
+
+]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1764130967839</Id>
+					<Name><![CDATA[actualizarColoresMapa]]></Name>
+					<X>-760</X><Y>-400</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[    for (Municipio m : municipios) {
+
+        // Color según tasaActual
+        Color c = colorPorTasa( m.tasaActual );
+
+        // PINTAR el rectángulo del municipio
+        m.rect.setFillColor( c );
+
+        // resetear bordes básicos
+        m.rect.setLineWidth(1);
+        m.rect.setLineColor(Color.LIGHT_GRAY);
+
+        
+        }]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[Color]]></ReturnType>
+					<Id>1764137553244</Id>
+					<Name><![CDATA[colorPorTasa]]></Name>
+					<X>-760</X><Y>-480</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[tasa]]></Name>
+						<Type><![CDATA[double]]></Type>
+					</Parameter>
+					<Body><![CDATA[if (Double.isNaN(tasa) || tasa < 0)
+        tasa = 0;
+    double UMBRAL_BAJO   = 20;   // <20 → verde
+    double UMBRAL_MEDIO  = 60;   // 20–60 → amarillo
+    double UMBRAL_ALTO   = 120;  // 60–120 → naranja
+    // >120 → rojo
+
+    if (tasa < UMBRAL_BAJO) {
+        // Riesgo bajo
+        return new Color(222, 242, 220);  // verde muy claro
+    } else if (tasa < UMBRAL_MEDIO) {
+        // Riesgo medio
+        return new Color(255, 255, 204);  // amarillo claro
+    } else if (tasa < UMBRAL_ALTO) {
+        // Riesgo alto
+        return new Color(255, 204, 153);  // naranja
+    } else {
+        // Riesgo extremo
+        return new Color(255, 153, 153);  // rojo
+    }]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1764659782815</Id>
+					<Name><![CDATA[actualizarPeriodoDesdeIndice]]></Name>
+					<X>-750</X><Y>-370</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[int baseYear = 2015;
+    int offset   = indiceMesActual;
+
+    int anioFiltro = baseYear + offset / 12;
+    int mesFiltro  = 1 + (offset % 12);
+
+    periodoActual = anioFiltro;
+    mesActual     = mesFiltro;]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1764732483414</Id>
+					<Name><![CDATA[seleccionarFoco]]></Name>
+					<X>-880</X><Y>-340</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[foco]]></Name>
+						<Type><![CDATA[Municipio]]></Type>
+					</Parameter>
+					<Body><![CDATA[// Pausar la animación
+    animacionPausada = true;
+
+    // Dibujar mapa con foco y vecinos
+    construccionredFoco( foco );
+
+    // Programar reanudación en 1 segundo
+    eventoReanudarAnimacion.restart( duracionPausaFoco );]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1764741400701</Id>
+					<Name><![CDATA[analizarSubtipos]]></Name>
+					<X>-940</X><Y>-410</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[Map<String, Integer> totalPorSubtipo = new LinkedHashMap<>();
+
+    for (Tuple t : selectFrom(datospoblacion).list()) {
+
+        String subtipo = t.get(datospoblacion.subtipo_de_delito);
+        Integer casos  = t.get(datospoblacion.casos);
+
+        if (subtipo == null || casos == null) continue;
+
+        totalPorSubtipo.merge(subtipo, casos, Integer::sum);
+    }
+
+    traceln("=== TOTAL DE CASOS POR SUBTIPO ===");
+    for (String subtipo : totalPorSubtipo.keySet()) {
+        traceln(subtipo + " -> " + totalPorSubtipo.get(subtipo));
+    }]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1764745758491</Id>
+					<Name><![CDATA[cargarPoblacionMunicipios]]></Name>
+					<X>-710</X><Y>-230</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[Set<String> asignados = new HashSet<>();
+
+    for (Tuple t : selectFrom(datospoblacion).list()) {
+
+        String muni = t.get(datospoblacion.municipio_norm);
+        Integer pobl = t.get(datospoblacion.poblacion_2020);  
+
+        if (muni == null || pobl == null) continue;
+
+        Municipio m = buscarMunicipio(muni);
+        if (m == null) continue;
+
+        if (!asignados.contains(muni)) {
+            m.poblacion2020 = pobl;       // ⭐ AQUÍ CARGAMOS LA POBLACIÓN
+            asignados.add(muni);
+        }
+    }
+
+    traceln("Población asignada a " + asignados.size() + " municipios.");]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1764750054156</Id>
+					<Name><![CDATA[resumenDelitosSimulados]]></Name>
+					<X>-890</X><Y>-700</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[traceln("=== RESUMEN DELITOS  (subtipo " + subtipoSeleccionado + ") ===");
+
+    // mapa municipio -> conteo
+    LinkedHashMap<String, Integer> conteoPorMuni = new LinkedHashMap<>();
+
+    for (DelitoSimulado d : delitosSimulados) {
+        String nombre = d.municipio.nombre;
+        conteoPorMuni.merge(nombre, 1, Integer::sum);
+    }
+
+    for (String muni : conteoPorMuni.keySet()) {
+        traceln(muni + " -> " + conteoPorMuni.get(muni));
+    }
+
+    traceln("Total delitos: " + delitosSimulados.size());]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1764779511836</Id>
+					<Name><![CDATA[analizarProbSubtiposPorMunicipio]]></Name>
+					<X>-1020</X><Y>-520</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[traceln("=== PROBABILIDAD DE SUBTIPOS POR MUNICIPIO (datos 2015-2025) ===");
+
+    // municipio -> (subtipo -> casos)
+    LinkedHashMap<String, LinkedHashMap<String, Integer>> conteo = new LinkedHashMap<>();
+
+    for (Tuple t : selectFrom(datospoblacion).list()) {
+
+        String muni = t.get(datospoblacion.municipio_norm);
+        String subt = t.get(datospoblacion.subtipo_de_delito);   // usa el nombre real de tu columna
+        Integer casos = t.get(datospoblacion.casos);          // idem
+
+        if (muni == null || subt == null || casos == null)
+            continue;
+
+        // limitar a municipios de la red
+        Municipio muniObj = buscarMunicipio(muni);
+        if (muniObj == null)
+            continue;
+
+        // limitar a los subtipos que definiste (violencia familiar, lesiones dolosas, homicidio doloso)
+        boolean permitido = false;
+        String nombreCanonico = null;
+        for (String s : subtiposPermitidos) {
+            if (s.equalsIgnoreCase(subt)) {
+                permitido = true;
+                nombreCanonico = s;
+                break;
+            }
+        }
+        if (!permitido)
+            continue;
+
+        // obtener o crear el mapa de subtipos para este municipio
+        LinkedHashMap<String, Integer> mapaSub = conteo.get(muni);
+        if (mapaSub == null) {
+            mapaSub = new LinkedHashMap<>();
+            conteo.put(muni, mapaSub);
+        }
+
+        // acumular casos
+        mapaSub.merge(nombreCanonico, casos, Integer::sum);
+    }
+
+    // Ahora calculamos probabilidades por municipio
+    for (String muni : conteo.keySet()) {
+
+        LinkedHashMap<String, Integer> mapaSub = conteo.get(muni);
+
+        int totalCasos = 0;
+        for (Integer c : mapaSub.values())
+            totalCasos += c;
+
+        traceln("Municipio: " + muni + "  (total casos = " + totalCasos + ")");
+
+        String subtipoMasProb = null;
+        double mejorProb = -1.0;
+
+        for (String subt : mapaSub.keySet()) {
+
+            int c = mapaSub.get(subt);
+            double p = (double) c / totalCasos;
+
+            traceln("  " + subt + " -> " + c + " casos  (p ≈ " + p + ")");
+
+            if (p > mejorProb) {
+                mejorProb = p;
+                subtipoMasProb = subt;
+            }
+        }
+
+        traceln("  *** Subtipo más probable: " + subtipoMasProb + "  (p ≈ " + mejorProb + ")");
+        traceln("");
+    }]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[int]]></ReturnType>
+					<Id>1764787475482</Id>
+					<Name><![CDATA[indiceMesDesdeAnioMes]]></Name>
+					<X>-980</X><Y>-600</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[anio]]></Name>
+						<Type><![CDATA[int]]></Type>
+					</Parameter>
+					<Parameter>
+						<Name><![CDATA[mes]]></Name>
+						<Type><![CDATA[int]]></Type>
+					</Parameter>
+					<Body><![CDATA[return (anio - 2015) * 12 + (mes - 1);
+]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1764788253010</Id>
+					<Name><![CDATA[analizarCuandoMunicipioYSubtipo]]></Name>
+					<X>-900</X><Y>-740</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[muni]]></Name>
+						<Type><![CDATA[Municipio]]></Type>
+					</Parameter>
+					<Parameter>
+						<Name><![CDATA[subt]]></Name>
+						<Type><![CDATA[String]]></Type>
+					</Parameter>
+					<Body><![CDATA[int anioInicioAnalisis = periodoActual;  // solo analizamos desde el año actual
+int n = 0;
+    int firstIndex = Integer.MAX_VALUE;
+    int lastIndex  = -1;
+
+    for (DelitoSimulado d : delitosSimulados) {
+
+    if (d.municipio != muni)
+        continue;
+
+    if (!d.subtipo.equalsIgnoreCase(subt))
+        continue;
+
+    // solo considerar delitos desde el año actual en adelante
+    if (d.anio < anioInicioAnalisis)
+        continue;
+
+    int idx = indiceMesDesdeAnioMes(d.anio, d.mes);
+
+    n++;
+
+    if (idx < firstIndex)
+        firstIndex = idx;
+
+    if (idx > lastIndex)
+        lastIndex = idx;
+}
+    
+
+    if (n == 0) {
+        traceln("No hay delitos  de " + subt +
+                " en " + muni.nombre + " en todo el periodo.");
+        return;
+    }
+
+    // Convertimos el índice del primer delito a (año, mes)
+    int firstYear  = 2015 + firstIndex / 12;
+    int firstMonth = 1 + (firstIndex % 12);
+
+    traceln("=== ANALISIS CUÁNDO PARA " + muni.nombre +
+            " / " + subt + " ===");
+    traceln("Total de delitos: " + n);
+    traceln("Primer delito en el mes de: " + firstMonth + "-" + firstYear);
+
+    if (n >= 2) {
+    double intervaloMeses = (double)(lastIndex - firstIndex) / (n - 1);
+    double intervaloDias  = intervaloMeses * 30.0;
+
+    traceln("Intervalo promedio entre delitos (aprox): " 
+            + intervaloDias + " días");
+} else {
+    traceln("Solo hay 1 delito ; no se puede estimar intervalo promedio.");
+}
+    
+    
+// 4) Delitos promedio por mes desde anioInicioAnalisis hasta el tiempo actual
+int idxInicio = indiceMesDesdeAnioMes(anioInicioAnalisis, 1);
+int idxFin    = indiceMesDesdeAnioMes(periodoActual, mesActual);
+int numMeses  = idxFin - idxInicio + 1;
+if (numMeses <= 0) numMeses = 1;  // por seguridad
+
+double delitosPorMes = (double) n / numMeses;
+
+
+traceln("Delitos promedio por mes: " + delitosPorMes);
+
+    traceln("");]]></Body>
+				</Function>
+			</Functions>
+			<AnalysisData>
+    			<DataSet>
+					<Id>1764753178111</Id>
+					<Name><![CDATA[dsDelitosMensuales]]></Name>
+					<X>-1000</X><Y>40</Y>
+					<Label><X>15</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<AutoUpdate>false</AutoUpdate>
+					<RecurrenceProperties>
+						<Id>1764753178104</Id>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1764835200000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</RecurrenceCode>
+					</RecurrenceProperties>
+					<FreezeXAxis>true</FreezeXAxis>
+					<SamplesToKeep>5000</SamplesToKeep>
+				</DataSet>
+    			<DataSet>
+					<Id>1764888115067</Id>
+					<Name><![CDATA[dsCuandoXoxo]]></Name>
+					<X>-1000</X><Y>70</Y>
+					<Label><X>15</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<AutoUpdate>false</AutoUpdate>
+					<RecurrenceProperties>
+						<Id>1764888115055</Id>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1764921600000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</RecurrenceCode>
+					</RecurrenceProperties>
+					<FreezeXAxis>true</FreezeXAxis>
+					<SamplesToKeep>500</SamplesToKeep>
+				</DataSet>
+    			<DataSet>
+					<Id>1764888151312</Id>
+					<Name><![CDATA[dsCuandoOaxaca]]></Name>
+					<X>-1000</X><Y>110</Y>
+					<Label><X>15</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<AutoUpdate>false</AutoUpdate>
+					<RecurrenceProperties>
+						<Id>1764888151310</Id>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1764921600000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</RecurrenceCode>
+					</RecurrenceProperties>
+					<FreezeXAxis>true</FreezeXAxis>
+					<SamplesToKeep>500</SamplesToKeep>
+				</DataSet>
+    			<HistogramData>
+					<Id>1764889544801</Id>
+					<Name><![CDATA[histDelitos]]></Name>
+					<X>-1000</X><Y>140</Y>
+					<Label><X>15</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<AutoUpdate>false</AutoUpdate>
+					<RecurrenceProperties>
+						<Id>1764889544796</Id>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1764921600000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</RecurrenceCode>
+					</RecurrenceProperties>
+					<Value><![CDATA[]]></Value>
+					<NumberOfIntervals>20</NumberOfIntervals>
+					<MinMaxAutodetect>true</MinMaxAutodetect>
+					<RangeMinExpression><![CDATA[0]]></RangeMinExpression>
+					<RangeMaxExpression><![CDATA[1]]></RangeMaxExpression>
+					<InitialIntervalSize><![CDATA[0.1]]></InitialIntervalSize>
+					<CalculateCDF>false</CalculateCDF>
+					<CalculatePercentiles>false</CalculatePercentiles>
+					<LowPercent>10</LowPercent>
+					<HighPercent>10</HighPercent>
+					<Title><![CDATA[]]></Title>
+				</HistogramData>
+			</AnalysisData>
+			<AgentLinks>
+				<AgentLink>
+					<Id>1762856276609</Id>
+					<Name><![CDATA[connections]]></Name>
+					<X>50</X><Y>-50</Y>
+					<Label><X>15</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<HandleReceiveInConnections>false</HandleReceiveInConnections>
+					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
+					<AgentReferenceId>1762858752106</AgentReferenceId>
+					<AgentLinkBidirectional>true</AgentLinkBidirectional>
+					<MessageType><![CDATA[Object]]></MessageType>
+					<DrawLine>true</DrawLine>
+					<LineStyle>SOLID</LineStyle>
+					<LineWidth>3</LineWidth>
+					<LineColor>-16777216</LineColor>
+					<LineZOrder>UNDER_AGENTS</LineZOrder>
+					<LineArrow>NONE</LineArrow>
+					<LineArrowPosition>END</LineArrowPosition>
+				</AgentLink>
+			</AgentLinks>
+
+			<EmbeddedObjects>
+				<EmbeddedObject>
+					<Id>1763401820247</Id>
+					<Name><![CDATA[municipios]]></Name>
+					<X>-770</X><Y>-530</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<PresentationId>1763401835928</PresentationId>
+					<ActiveObjectClass>
+						<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+						<ClassName><![CDATA[Municipio]]></ClassName>
+					</ActiveObjectClass>
+					<GenericParameterSubstitute>
+						<GenericParameterSubstituteReference>
+							<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+							<ClassName><![CDATA[Municipio]]></ClassName>
+							<ItemName><![CDATA[1762858752111]]></ItemName>
+						</GenericParameterSubstituteReference>
+					</GenericParameterSubstitute>
+					<Parameters>
+						<Parameter>
+							<Name><![CDATA[nombre]]></Name>
+						</Parameter>
+						<Parameter>
+							<Name><![CDATA[poblacion2020]]></Name>
+						</Parameter>
+						<Parameter>
+							<Name><![CDATA[inicioTardio]]></Name>
+						</Parameter>
+					</Parameters>
+					<ReplicationFlag>true</ReplicationFlag>
+					<Replication Class="CodeValue">
+						<Code><![CDATA[100]]></Code>
+					</Replication>
+					<CollectionType>ARRAY_LIST_BASED</CollectionType>
+					<InEnvironment>true</InEnvironment>
+					<InitialLocationType>XYZ</InitialLocationType>
+					<ColumnCode Class="CodeValue">
+						<Code><![CDATA[0]]></Code>
+					</ColumnCode>
+					<RowCode Class="CodeValue">
+						<Code><![CDATA[0]]></Code>
+					</RowCode>
+					<LocationNameCode Class="CodeValue">
+						<Code><![CDATA[""]]></Code>
+					</LocationNameCode>
+					<InitializationType>LOAD_FROM_DATABASE</InitializationType>
+					<InitializationDatabaseTableQuery>
+						<Id>1763401820245</Id>
+						<TableReference>
+							<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+							<ClassName><![CDATA[municipios_anylogic]]></ClassName>
+						</TableReference>
+					</InitializationDatabaseTableQuery>
+					<InitializationDatabaseType>ONE_AGENT_PER_DATABASE_RECORD</InitializationDatabaseType>
+					<QuantityColumn>
+					</QuantityColumn>
+					<ParameterToDatabaseColumnMapping>
+						<Item>
+							<Key>
+								<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+								<ClassName><![CDATA[Municipio]]></ClassName>
+								<ItemName><![CDATA[nombre]]></ItemName>
+							</Key>
+							<Value>
+								<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+								<ClassName><![CDATA[municipios_anylogic]]></ClassName>
+								<ItemName><![CDATA[nombre]]></ItemName>
+							</Value>
+						</Item>
+						<Item>
+							<Key>
+								<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+								<ClassName><![CDATA[Municipio]]></ClassName>
+								<ItemName><![CDATA[poblacion2020]]></ItemName>
+							</Key>
+							<Value>
+								<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+								<ClassName><![CDATA[municipios_anylogic]]></ClassName>
+								<ItemName><![CDATA[poblacion2020]]></ItemName>
+							</Value>
+						</Item>
+						<Item>
+							<Key>
+								<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+								<ClassName><![CDATA[Municipio]]></ClassName>
+								<ItemName><![CDATA[inicioTardio]]></ItemName>
+							</Key>
+							<Value>
+								<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+								<ClassName><![CDATA[municipios_anylogic]]></ClassName>
+								<ItemName><![CDATA[inicio_tardio]]></ItemName>
+							</Value>
+						</Item>
+					</ParameterToDatabaseColumnMapping>
+				</EmbeddedObject>
+			</EmbeddedObjects>
+
+			<Presentation>
+				<Level>
+					<Id>1762856276626</Id>
+					<Name><![CDATA[level]]></Name>
+					<X>0</X><Y>0</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<Z>0</Z>
+					<LevelVisibility>DIM_NON_CURRENT</LevelVisibility>
+
+			<Presentation>
+				<Rectangle>
+					<Id>1764825779241</Id>
+					<Name><![CDATA[panelResultadosRect]]></Name>
+					<X>-710</X><Y>0</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<ZHeight>10</ZHeight>
+					<LineWidth>2</LineWidth>
+					<LineColor>-16777216</LineColor>
+					<LineMaterial>null</LineMaterial>
+					<LineStyle>SOLID</LineStyle>
+					<Width>1210</Width>
+					<Height>860</Height>
+					<Rotation>0.0</Rotation>
+					<FillColor>-1644806</FillColor>
+					<FillMaterial>null</FillMaterial>
+				</Rectangle>
+				<Line>
+					<Id>1763892295852</Id>
+					<Name><![CDATA[lineaConexion]]></Name>
+					<X>30</X><Y>100</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<ZHeight>10</ZHeight>
+					<LineWidth>1</LineWidth>
+					<LineColor>-4144960</LineColor>
+					<LineMaterial>null</LineMaterial>
+					<LineStyle>SOLID</LineStyle>
+					<BeginArrowSize>1</BeginArrowSize>
+					<BeginArrowStyle>0</BeginArrowStyle>
+					<EndArrowSize>1</EndArrowSize>
+					<EndArrowStyle>0</EndArrowStyle>
+					<Dx>60</Dx>
+					<Dy>-40</Dy>
+					<Dz>0</Dz>
+				</Line>
+				<Control Type="Button">
+				 	<EmbeddedIcon>false</EmbeddedIcon>				
+					<Id>1764750148155</Id>
+					<Name><![CDATA[delitoSimulados]]></Name>
+					<X>-470</X><Y>-250</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<BasicProperties Width="130" Height="30">
+                        <EmbeddedIcon>false</EmbeddedIcon>	
+						<TextColor>-16777216</TextColor>
+						<Enabled>false</Enabled>
+						<ActionCode><![CDATA[resumenDelitosSimulados();
+]]></ActionCode>
+					</BasicProperties>
+					<ExtendedProperties>
+						<Font Name="Dialog" Size="11" Style="1"/>
+						<LabelText><![CDATA[Delitos]]></LabelText>
+					</ExtendedProperties>
+				</Control>
+    			<TimePlot>
+					<Id>1764753953882</Id>
+					<Name><![CDATA[plot]]></Name>
+					<X>-210</X><Y>290</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<AutoUpdate>true</AutoUpdate>
+					<RecurrenceProperties>
+						<Id>1764753953880</Id>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1764835200000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</RecurrenceCode>
+					</RecurrenceProperties>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Width>320</Width>
+					<Height>230</Height>
+					<HeightCode><![CDATA[groupGraficos.getHeight() - 800
+]]></HeightCode>
+					<WidthCode><![CDATA[groupGraficos.getWidth() - 600
+]]></WidthCode>
+					<BackgroundColor/>
+					<BorderColor/>
+					<XCode><![CDATA[groupGraficos.getY() + 10
+]]></XCode>
+					<YCode><![CDATA[groupGraficos.getY() + 40
+]]></YCode>
+					<ChartArea>
+						<XOffset>50</XOffset>
+						<YOffset>30</YOffset>
+						<Width>210</Width>
+						<Height>170</Height>
+						<BackgroundColor>-1</BackgroundColor>
+						<BorderColor>-16777216</BorderColor>
+						<GridColor>-12566464</GridColor>
+					</ChartArea>
+					<Legend>
+						<Place>WEST</Place>
+						<TextColor>-16777216</TextColor>
+						<Size>30</Size>
+					</Legend>
+					<Labels>
+						<HorLabelsPosition>DEFAULT</HorLabelsPosition>
+						<VerLabelsPosition>DEFAULT</VerLabelsPosition>
+						<TextColor>-12566464</TextColor>
+					</Labels>
+					<ShowLegend>true</ShowLegend>
+					<TimeWindowsMovementType>MOVEMENT_WITH_TIME</TimeWindowsMovementType>		
+					<TimeWindowUnits>MODEL_TIME_UNIT</TimeWindowUnits>
+					<VerScaleFromExpression><![CDATA[0]]></VerScaleFromExpression>
+					<VerScaleToExpression><![CDATA[1]]></VerScaleToExpression>
+					<VerScaleType>AUTO</VerScaleType>
+					<DrawLine>true</DrawLine>
+					<Interpolation>LINEAR</Interpolation>
+					<DatasetExpression>  
+						<Title><![CDATA[Datos historicos por mes]]></Title>
+					<Id>1764753955095</Id>
+					<Expression><![CDATA[dsDelitosMensuales]]></Expression>
+					<Color>-65536</Color>
+					<Expression2><![CDATA[0]]></Expression2>
+					<Expression2Flag>false</Expression2Flag>
+						<PointStyle>NONE</PointStyle>
+						<LineWidth>1.0</LineWidth>
+					</DatasetExpression>
+					<SamplesToKeep>100</SamplesToKeep>
+					<TimeWindowExpression><![CDATA[100]]></TimeWindowExpression>
+					<FillAreaUnderLine>false</FillAreaUnderLine>
+					<LabelFormat>MODEL_TIME_UNITS</LabelFormat>
+    			</TimePlot>
+				<Control Type="Button">
+				 	<EmbeddedIcon>false</EmbeddedIcon>				
+					<Id>1764780052104</Id>
+					<Name><![CDATA[button]]></Name>
+					<X>-460</X><Y>-220</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<BasicProperties Width="100" Height="30">
+                        <EmbeddedIcon>false</EmbeddedIcon>	
+						<TextColor>-16777216</TextColor>
+						<Enabled>false</Enabled>
+						<ActionCode><![CDATA[analizarProbSubtiposPorMunicipio();]]></ActionCode>
+					</BasicProperties>
+					<ExtendedProperties>
+						<Font Name="Dialog" Size="11" Style="0"/>
+						<LabelText><![CDATA[button]]></LabelText>
+					</ExtendedProperties>
+				</Control>
+				<Control Type="Button">
+				 	<EmbeddedIcon>false</EmbeddedIcon>				
+					<Id>1764788375513</Id>
+					<Name><![CDATA[botonCuando]]></Name>
+					<X>220</X><Y>10</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<BasicProperties Width="100" Height="30">
+                        <EmbeddedIcon>false</EmbeddedIcon>	
+						<TextColor>-16777216</TextColor>
+						<Enabled>true</Enabled>
+						<ActionCode><![CDATA[Municipio oax = buscarMunicipio("oaxaca de juarez");
+analizarCuandoMunicipioYSubtipo(oax, "violencia familiar");
+// Santa Cruz Xoxocotlán
+Municipio xoxo = buscarMunicipio("santa cruz xoxocotlan");
+analizarCuandoMunicipioYSubtipo(xoxo, "violencia familiar");]]></ActionCode>
+					</BasicProperties>
+					<ExtendedProperties>
+						<Font Name="Dialog" Size="11" Style="0"/>
+						<LabelText><![CDATA[cuando]]></LabelText>
+					</ExtendedProperties>
+				</Control>
+    			<Histogram>
+					<Id>1764889707565</Id>
+					<Name><![CDATA[histDelitosChart]]></Name>
+					<X>-270</X><Y>570</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<AutoUpdate>false</AutoUpdate>
+					<RecurrenceProperties>
+						<Id>1764889707562</Id>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1764921600000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</RecurrenceCode>
+					</RecurrenceProperties>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Width>260</Width>
+					<Height>210</Height>
+					<HeightCode><![CDATA[groupGraficos.getHeight() - 80
+]]></HeightCode>
+					<WidthCode><![CDATA[groupGraficos.getHeight() - 60
+]]></WidthCode>
+					<BackgroundColor/>
+					<BorderColor/>
+					<XCode><![CDATA[groupGraficos.getY() - 20
+]]></XCode>
+					<YCode><![CDATA[groupGraficos.getY() - 10
+]]></YCode>
+					<ChartArea>
+						<XOffset>50</XOffset>
+						<YOffset>30</YOffset>
+						<Width>180</Width>
+						<Height>120</Height>
+						<BackgroundColor>-1</BackgroundColor>
+						<BorderColor>-16777216</BorderColor>
+						<GridColor>-12566464</GridColor>
+					</ChartArea>
+					<Legend>
+						<Place>SOUTH</Place>
+						<TextColor>-16777216</TextColor>
+						<Size>30</Size>
+					</Legend>
+					<Labels>
+						<HorLabelsPosition>DEFAULT</HorLabelsPosition>
+						<VerLabelsPosition>DEFAULT</VerLabelsPosition>
+						<TextColor>-12566464</TextColor>
+					</Labels>
+					<ShowLegend>true</ShowLegend>
+					<ShowPDF>true</ShowPDF>
+					<ShowCDF>false</ShowCDF>
+					<ShowMean>true</ShowMean>
+					<Bars>
+						<Direction>UP</Direction>
+						<RelativeWidth>0.8</RelativeWidth>
+					</Bars>
+					<HistogramDataExpression>
+					<Id>1764889709339</Id>
+					<Expression><![CDATA[histDelitos]]></Expression>
+						<ColorPDF>-10496</ColorPDF>
+						<ColorCDF>-12004916</ColorCDF>
+						<ColorLowPercent>-23296</ColorLowPercent>
+						<ColorHighPercent>-12799119</ColorHighPercent>
+						<ColorMean>-8355712</ColorMean>
+						<LineWidth>1</LineWidth>						
+						<Title><![CDATA[Distribución mensual de delitos]]></Title>							
+					</HistogramDataExpression>
+    			</Histogram>
+				<Control Type="ComboBox">
+				 	<EmbeddedIcon>false</EmbeddedIcon>				
+					<Id>1764891151379</Id>
+					<Name><![CDATA[comboGraficos]]></Name>
+					<X>390</X><Y>10</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<BasicProperties Width="100" Height="20">
+                        <EmbeddedIcon>false</EmbeddedIcon>	
+						<FillColor>-1</FillColor>
+						<TextColor>-16777216</TextColor>
+						<Enabled>true</Enabled>
+						<ActionCode><![CDATA[// Mostrar / ocultar gráficos según la opción seleccionada
+if (graficoSeleccionado.equals("TimePlot mensual")) {
+    plot.setVisible(true);              // primer TimePlot
+    timePlotCuando.setVisible(false);   // segundo TimePlot
+    histDelitosChart.setVisible(false); // histograma
+}
+else if (graficoSeleccionado.equals("TimePlot análisis CUANDO")) {
+    plot.setVisible(false);
+    timePlotCuando.setVisible(true);
+    histDelitosChart.setVisible(false);
+}
+else if (graficoSeleccionado.equals("Histograma de delitos")) {
+    plot.setVisible(false);
+    timePlotCuando.setVisible(false);
+    histDelitosChart.setVisible(true);
+}
+else { 
+    // Para el ítem "---------" u otros
+    plot.setVisible(false);
+    timePlotCuando.setVisible(false);
+    histDelitosChart.setVisible(false);
+}
+]]></ActionCode>
+					</BasicProperties>
+					<ExtendedProperties>
+						<Font Name="Dialog" Size="11" Style="0"/>
+						<Editable>false</Editable>
+						<Button><![CDATA[------------------]]></Button>
+						<Button><![CDATA[TimePlot mensual]]></Button>
+						<Button><![CDATA[TimePlot análisis CUANDO]]></Button>
+						<Button><![CDATA[Histograma de delitos]]></Button>
+						<LinkTo>true</LinkTo>
+						<Link>graficoSeleccionado</Link>
+					</ExtendedProperties>
+				</Control>
+				<Rectangle>
+					<Id>1764916949252</Id>
+					<Name><![CDATA[groupGraficos]]></Name>
+					<X>-280</X><Y>90</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<ZHeight>10</ZHeight>
+					<LineWidth>0</LineWidth>
+					<LineColor/>
+					<LineMaterial>null</LineMaterial>
+					<LineStyle>SOLID</LineStyle>
+					<Width>600</Width>
+					<Height>700</Height>
+					<Rotation>0.0</Rotation>
+					<FillColor/>
+					<FillMaterial>null</FillMaterial>
+				</Rectangle>
+    			<TimePlot>
+					<Id>1764887729990</Id>
+					<Name><![CDATA[timePlotCuando]]></Name>
+					<X>-250</X><Y>290</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<AutoUpdate>true</AutoUpdate>
+					<RecurrenceProperties>
+						<Id>1764887729988</Id>
+						<OccurrenceAtTime>true</OccurrenceAtTime>
+						<OccurrenceDate>1764921600000</OccurrenceDate>
+						<OccurrenceTime Class="CodeUnitValue">
+							<Code><![CDATA[0]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</OccurrenceTime>
+						<RecurrenceCode Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+						</RecurrenceCode>
+					</RecurrenceProperties>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Width>390</Width>
+					<Height>210</Height>
+					<HeightCode><![CDATA[groupGraficos.getHeight() - 800
+]]></HeightCode>
+					<WidthCode><![CDATA[groupGraficos.getWidth() - 80
+]]></WidthCode>
+					<BackgroundColor/>
+					<BorderColor/>
+					<XCode><![CDATA[groupGraficos.getY() + 10
+]]></XCode>
+					<YCode><![CDATA[groupGraficos.getY() + 40
+]]></YCode>
+					<ChartArea>
+						<XOffset>50</XOffset>
+						<YOffset>30</YOffset>
+						<Width>310</Width>
+						<Height>120</Height>
+						<BackgroundColor>-1</BackgroundColor>
+						<BorderColor>-16777216</BorderColor>
+						<GridColor>-12566464</GridColor>
+					</ChartArea>
+					<Legend>
+						<Place>NORTH</Place>
+						<TextColor>-16777216</TextColor>
+						<Size>30</Size>
+					</Legend>
+					<Labels>
+						<HorLabelsPosition>DEFAULT</HorLabelsPosition>
+						<VerLabelsPosition>DEFAULT</VerLabelsPosition>
+						<TextColor>-12566464</TextColor>
+					</Labels>
+					<ShowLegend>true</ShowLegend>
+					<TimeWindowsMovementType>MOVEMENT_WITH_TIME</TimeWindowsMovementType>		
+					<TimeWindowUnits>MODEL_TIME_UNIT</TimeWindowUnits>
+					<VerScaleFromExpression><![CDATA[0]]></VerScaleFromExpression>
+					<VerScaleToExpression><![CDATA[1]]></VerScaleToExpression>
+					<VerScaleType>AUTO</VerScaleType>
+					<DrawLine>true</DrawLine>
+					<Interpolation>LINEAR</Interpolation>
+					<DatasetExpression>  
+						<Title><![CDATA[Oaxaca de Júarez]]></Title>
+					<Id>1764887733437</Id>
+					<Expression><![CDATA[dsCuandoOaxaca]]></Expression>
+					<Color>-16711681</Color>
+					<Expression2><![CDATA[0]]></Expression2>
+					<Expression2Flag>false</Expression2Flag>
+						<PointStyle>NONE</PointStyle>
+						<LineWidth>1.0</LineWidth>
+					</DatasetExpression>
+					<DatasetExpression>  
+						<Title><![CDATA[Santa Cruz Xoxocotlán]]></Title>
+					<Id>1764888395929</Id>
+					<Expression><![CDATA[dsCuandoXoxo]]></Expression>
+					<Color>-8388608</Color>
+					<Expression2><![CDATA[0]]></Expression2>
+					<Expression2Flag>false</Expression2Flag>
+						<PointStyle>NONE</PointStyle>
+						<LineWidth>1.0</LineWidth>
+					</DatasetExpression>
+					<SamplesToKeep>100</SamplesToKeep>
+					<TimeWindowExpression><![CDATA[100]]></TimeWindowExpression>
+					<FillAreaUnderLine>false</FillAreaUnderLine>
+					<LabelFormat>MODEL_TIME_UNITS</LabelFormat>
+    			</TimePlot>
+			</Presentation>
+
+				</Level>
+				<EmbeddedObjectPresentation>
+					<Id>1763401835928</Id>
+					<Name><![CDATA[municipios_presentation]]></Name>
+					<X>-610</X><Y>-150</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<ScaleType>AUTOMATICALLY_CALCULATED</ScaleType>
+					<GISScaleForRealEmbeddedObjectPresentationSize>1000</GISScaleForRealEmbeddedObjectPresentationSize>
+					<GISScaleForFixedEmbeddedObjectPresentationSize>1000000000</GISScaleForFixedEmbeddedObjectPresentationSize>
+					<Latitude>0.0</Latitude>
+					<Longitude>0.0</Longitude>
+				</EmbeddedObjectPresentation>
+				<Level>
+					<Id>1765000369745</Id>
+					<Name><![CDATA[level1]]></Name>
+					<X>0</X><Y>0</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<Z>0</Z>
+					<LevelVisibility>DIM_NON_CURRENT</LevelVisibility>
+
+
+				</Level>
+			</Presentation>
+
+		</ActiveObjectClass>
+		<!--   =========   Active Object Class   ========  -->
+		<ActiveObjectClass>
+			<Id>1762858752106</Id>
+			<Name><![CDATA[Municipio]]></Name>
+			<Import><![CDATA[import java.util.ArrayList;
+import java.util.List;
+import java.util.LinkedHashMap;
+
+]]></Import>
+			<StartupCode><![CDATA[// ESTE CÓDIGO VA DENTRO DEL AGENTE 'MUNICIPIO' (NO EN MAIN)
+// --- CONTROL DE TAMAÑO DE CAJAS ---
+
+String textoDisplay = nombre;
+
+// CAMBIO: Solo dividimos si es realmente necesario y no palabra por palabra.
+// El truco HTML permite que AnyLogic ajuste mejor el texto automáticamente.
+if (nombre.length() > 15) {
+    // Si es muy largo, usamos HTML para centrar y romper palabras suavemente
+    textoDisplay = "<html><div style='text-align: center; width: 80px;'>" + nombre + "</div></html>";
+}
+
+text.setText(textoDisplay); 
+
+// Dimensiones fijas más uniformes
+// Forzamos que casi todos tengan el mismo tamaño base
+double anchoFijo = 100; 
+double altoFijo = 40;   // Altura estándar para 2 líneas
+
+// Si el nombre es EXTREMADAMENTE largo, le damos un poco más de altura
+if (nombre.length() > 20) {
+    altoFijo = 55;
+}
+
+rect.setWidth(anchoFijo);
+rect.setHeight(altoFijo);
+
+// Re-centrar
+rect.setX( -anchoFijo / 2 );
+rect.setY( -altoFijo / 2 );
+
+rect.setLineWidth(1);
+rect.setFillColor( new Color(255, 255, 255, 230) );]]></StartupCode>
+			<Generic>false</Generic>
+			<GenericParameter>
+				<Id>1762858752111</Id>
+				<Name><![CDATA[1762858752111]]></Name>
+				<GenericParameterValue Class="CodeValue">
+					<Code><![CDATA[T extends Agent]]></Code>
+				</GenericParameterValue>
+				<GenericParameterLabel><![CDATA[Generic parameter:]]></GenericParameterLabel>
+			</GenericParameter>
+			<FlowChartsUsage>ENTITY</FlowChartsUsage>
+			<SamplesToKeep>100</SamplesToKeep>
+			<LimitNumberOfArrayElements>false</LimitNumberOfArrayElements>
+			<ElementsLimitValue>100</ElementsLimitValue>
+			<MakeDefaultViewArea>true</MakeDefaultViewArea>
+			<SceneGridColor/>
+			<SceneBackgroundColor>-4144960</SceneBackgroundColor>
+			<SceneSkybox>null</SceneSkybox>
+			<AgentProperties>
+				<EnvironmentDefinesInitialLocation>true</EnvironmentDefinesInitialLocation>
+				<RotateAnimationTowardsMovement>true</RotateAnimationTowardsMovement>
+				<RotateAnimationVertically>false</RotateAnimationVertically>
+				<VelocityCode Class="CodeUnitValue">
+					<Code><![CDATA[10]]></Code>
+					<Unit Class="SpeedUnits"><![CDATA[MPS]]></Unit>
+				</VelocityCode>
+				<PhysicalLength Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalLength>
+				<PhysicalWidth Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalWidth>
+				<PhysicalHeight Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalHeight>
+			</AgentProperties>
+			<EnvironmentProperties>
+					<EnableSteps>false</EnableSteps>
+					<StepDurationCode Class="CodeUnitValue">
+						<Code><![CDATA[1.0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</StepDurationCode>
+					<SpaceType>CONTINUOUS</SpaceType>
+					<WidthCode><![CDATA[500]]></WidthCode>
+					<HeightCode><![CDATA[500]]></HeightCode>
+					<ZHeightCode><![CDATA[0]]></ZHeightCode>
+					<ColumnsCountCode><![CDATA[100]]></ColumnsCountCode>
+					<RowsCountCode><![CDATA[100]]></RowsCountCode>
+					<NeigborhoodType>MOORE</NeigborhoodType>
+					<LayoutType>USER_DEF</LayoutType>
+					<NetworkType>USER_DEF</NetworkType>
+					<ConnectionsPerAgentCode><![CDATA[2]]></ConnectionsPerAgentCode>
+					<ConnectionsRangeCode><![CDATA[50]]></ConnectionsRangeCode>
+					<NeighborLinkFractionCode><![CDATA[0.95]]></NeighborLinkFractionCode>
+					<MCode><![CDATA[10]]></MCode>
+			</EnvironmentProperties>
+			<DatasetsCreationProperties>
+				<AutoCreate>true</AutoCreate>
+					<Id>1762858752105</Id>
+					<OccurrenceAtTime>true</OccurrenceAtTime>
+					<OccurrenceDate>1762934400000</OccurrenceDate>
+					<OccurrenceTime Class="CodeUnitValue">
+						<Code><![CDATA[0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+					</OccurrenceTime>
+					<RecurrenceCode Class="CodeUnitValue">
+						<Code><![CDATA[1]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+					</RecurrenceCode>
+			</DatasetsCreationProperties>
+			<ScaleRuler>
+				<Id>1762858752109</Id>
+				<Name><![CDATA[scale]]></Name>
+				<X>0</X><Y>-150</Y>
+				<PublicFlag>false</PublicFlag>
+				<PresentationFlag>false</PresentationFlag>
+				<ShowLabel>false</ShowLabel>
+				<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+				<Length>100</Length>
+				<Rotation>0</Rotation>
+				<ScaleType>BASED_ON_LENGTH</ScaleType>
+				<ModelLength>10</ModelLength>
+				<LengthUnits>METER</LengthUnits>
+				<Scale>10</Scale>
+				<InheritedFromParentAgentType>true</InheritedFromParentAgentType>
+			</ScaleRuler>
+			<CurrentLevel>1762858752112</CurrentLevel>
+			<ConnectionsId>1762858752107</ConnectionsId>
+			<Variables>
+				<Variable Class="PlainVariable">
+					<Id>1762859602082</Id>
+					<Name><![CDATA[tasaActual]]></Name>
+					<Description><![CDATA[tasa actual]]></Description>
+					<X>40</X><Y>-420</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[double]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0.0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1762859670005</Id>
+					<Name><![CDATA[tasasMensuales]]></Name>
+					<Description><![CDATA[guardara los casos mensuales(clave:delito
+)]]></Description>
+					<X>40</X><Y>-380</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>false</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[LinkedHashMap<Integer, Double>
+]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[new LinkedHashMap<Integer, Double>()
+]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1763390919491</Id>
+					<Name><![CDATA[probabilidadProximidad]]></Name>
+					<Description><![CDATA[probabilidad de interacción con municipios vecinos (por ejemplo, contagio, influencia, migración)]]></Description>
+					<X>40</X><Y>-500</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[double]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0.0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1763390923908</Id>
+					<Name><![CDATA[casosActuales]]></Name>
+					<Description><![CDATA[numero de casos activos]]></Description>
+					<X>40</X><Y>-460</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[double]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0.0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764745215938</Id>
+					<Name><![CDATA[lambdaMes]]></Name>
+					<X>50</X><Y>-540</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[double]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="Parameter">
+					<Id>1763389567444</Id>
+					<Name><![CDATA[nombre]]></Name>
+					<X>40</X><Y>-220</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[String]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[""]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1763389567442</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
+				<Variable Class="Parameter">
+					<Id>1763389624667</Id>
+					<Name><![CDATA[poblacion2020]]></Name>
+					<X>40</X><Y>-280</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[0
+]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1763389624665</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
+				<Variable Class="Parameter">
+					<Id>1763389654433</Id>
+					<Name><![CDATA[inicioTardio]]></Name>
+					<X>40</X><Y>-340</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[0]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1763389654431</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
+			</Variables>
+			<AgentLinks>
+				<AgentLink>
+					<Id>1762858752107</Id>
+					<Name><![CDATA[connections]]></Name>
+					<X>50</X><Y>-50</Y>
+					<Label><X>15</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<HandleReceiveInConnections>false</HandleReceiveInConnections>
+					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
+					<AgentReferenceId>1762858752106</AgentReferenceId>
+					<AgentLinkBidirectional>true</AgentLinkBidirectional>
+					<MessageType><![CDATA[Object]]></MessageType>
+					<LineStyle>SOLID</LineStyle>
+					<LineWidth>3</LineWidth>
+					<LineColor>-16777216</LineColor>
+					<LineZOrder>UNDER_AGENTS</LineZOrder>
+					<LineArrow>NONE</LineArrow>
+					<LineArrowPosition>END</LineArrowPosition>
+				</AgentLink>
+			</AgentLinks>
+
+			<ContainerLinks>
+				<ContainerLink>
+					<Id>1763401835950</Id>
+					<Name><![CDATA[main]]></Name>
+					<X>50</X><Y>-100</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<ActiveObjectClass>
+						<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+						<ClassName><![CDATA[Main]]></ClassName>
+					</ActiveObjectClass>
+				</ContainerLink>
+			</ContainerLinks>
+
+			<Presentation>
+				<Level>
+					<Id>1762858752112</Id>
+					<Name><![CDATA[level]]></Name>
+					<X>0</X><Y>0</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<Z>0</Z>
+					<LevelVisibility>DIM_NON_CURRENT</LevelVisibility>
+
+			<Presentation>
+				<Rectangle>
+					<Id>1763704803881</Id>
+					<Name><![CDATA[rect]]></Name>
+					<X>-80</X><Y>-10</Y>
+					<Label><X>10</X><Y>10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<OnClickCode><![CDATA[main.seleccionarFoco( this );
+]]></OnClickCode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<ZHeight>10</ZHeight>
+					<LineWidth>1</LineWidth>
+					<LineColor>-16777216</LineColor>
+					<LineMaterial>null</LineMaterial>
+					<LineStyle>SOLID</LineStyle>
+					<Width>160</Width>
+					<Height>80</Height>
+					<Rotation>0.0</Rotation>
+					<FillColor>-1</FillColor>
+					<FillMaterial>null</FillMaterial>
+				</Rectangle>
+				<Text>
+					<Id>1763704938353</Id>
+					<Name><![CDATA[text]]></Name>
+					<X>0</X><Y>0</Y>
+					<Label><X>0</X><Y>-10</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<Color>-16777216</Color>
+					<Text><![CDATA[nombre 
+]]></Text>
+					<TextCode><![CDATA[nombre]]></TextCode>
+					<Font>
+						<Name>SansSerif</Name>
+						<Size>9</Size>
+						<Style>0</Style>
+					</Font>
+					<Alignment>CENTER</Alignment>
+				</Text>
+			</Presentation>
+
+				</Level>
+			</Presentation>
+
+		</ActiveObjectClass>
+		<!--   =========   Active Object Class   ========  -->
+		<ActiveObjectClass>
+			<Id>1764748080667</Id>
+			<Name><![CDATA[DelitoSimulado]]></Name>
+			<Generic>false</Generic>
+			<GenericParameter>
+				<Id>1764748080672</Id>
+				<Name><![CDATA[1764748080672]]></Name>
+				<GenericParameterValue Class="CodeValue">
+					<Code><![CDATA[T extends Agent]]></Code>
+				</GenericParameterValue>
+				<GenericParameterLabel><![CDATA[Generic parameter:]]></GenericParameterLabel>
+			</GenericParameter>
+			<FlowChartsUsage>ENTITY</FlowChartsUsage>
+			<SamplesToKeep>100</SamplesToKeep>
+			<LimitNumberOfArrayElements>false</LimitNumberOfArrayElements>
+			<ElementsLimitValue>100</ElementsLimitValue>
+			<MakeDefaultViewArea>true</MakeDefaultViewArea>
+			<SceneGridColor/>
+			<SceneBackgroundColor>-4144960</SceneBackgroundColor>
+			<SceneSkybox>null</SceneSkybox>
+			<AgentProperties>
+				<EnvironmentDefinesInitialLocation>true</EnvironmentDefinesInitialLocation>
+				<RotateAnimationTowardsMovement>true</RotateAnimationTowardsMovement>
+				<RotateAnimationVertically>false</RotateAnimationVertically>
+				<VelocityCode Class="CodeUnitValue">
+					<Code><![CDATA[10]]></Code>
+					<Unit Class="SpeedUnits"><![CDATA[MPS]]></Unit>
+				</VelocityCode>
+				<PhysicalLength Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalLength>
+				<PhysicalWidth Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalWidth>
+				<PhysicalHeight Class="CodeUnitValue">
+					<Code><![CDATA[1]]></Code>
+					<Unit Class="LengthUnits"><![CDATA[METER]]></Unit>
+				</PhysicalHeight>
+			</AgentProperties>
+			<EnvironmentProperties>
+					<EnableSteps>false</EnableSteps>
+					<StepDurationCode Class="CodeUnitValue">
+						<Code><![CDATA[1.0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+					</StepDurationCode>
+					<SpaceType>CONTINUOUS</SpaceType>
+					<WidthCode><![CDATA[500]]></WidthCode>
+					<HeightCode><![CDATA[500]]></HeightCode>
+					<ZHeightCode><![CDATA[0]]></ZHeightCode>
+					<ColumnsCountCode><![CDATA[100]]></ColumnsCountCode>
+					<RowsCountCode><![CDATA[100]]></RowsCountCode>
+					<NeigborhoodType>MOORE</NeigborhoodType>
+					<LayoutType>USER_DEF</LayoutType>
+					<NetworkType>USER_DEF</NetworkType>
+					<ConnectionsPerAgentCode><![CDATA[2]]></ConnectionsPerAgentCode>
+					<ConnectionsRangeCode><![CDATA[50]]></ConnectionsRangeCode>
+					<NeighborLinkFractionCode><![CDATA[0.95]]></NeighborLinkFractionCode>
+					<MCode><![CDATA[10]]></MCode>
+			</EnvironmentProperties>
+			<DatasetsCreationProperties>
+				<AutoCreate>true</AutoCreate>
+					<Id>1764748080666</Id>
+					<OccurrenceAtTime>true</OccurrenceAtTime>
+					<OccurrenceDate>1764748800000</OccurrenceDate>
+					<OccurrenceTime Class="CodeUnitValue">
+						<Code><![CDATA[0]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+					</OccurrenceTime>
+					<RecurrenceCode Class="CodeUnitValue">
+						<Code><![CDATA[1]]></Code>
+						<Unit Class="TimeUnits"><![CDATA[DAY]]></Unit>
+					</RecurrenceCode>
+			</DatasetsCreationProperties>
+			<ScaleRuler>
+				<Id>1764748080670</Id>
+				<Name><![CDATA[scale]]></Name>
+				<X>0</X><Y>-150</Y>
+				<PublicFlag>false</PublicFlag>
+				<PresentationFlag>false</PresentationFlag>
+				<ShowLabel>false</ShowLabel>
+				<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+				<Length>100</Length>
+				<Rotation>0</Rotation>
+				<ScaleType>BASED_ON_LENGTH</ScaleType>
+				<ModelLength>10</ModelLength>
+				<LengthUnits>METER</LengthUnits>
+				<Scale>10</Scale>
+				<InheritedFromParentAgentType>true</InheritedFromParentAgentType>
+			</ScaleRuler>
+			<CurrentLevel>1764748080673</CurrentLevel>
+			<ConnectionsId>1764748080668</ConnectionsId>
+			<Variables>
+				<Variable Class="PlainVariable">
+					<Id>1764748105262</Id>
+					<Name><![CDATA[subtipo]]></Name>
+					<X>-230</X><Y>-370</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[String]]></Type>        
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764748192298</Id>
+					<Name><![CDATA[municipio]]></Name>
+					<X>-230</X><Y>-340</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[Municipio]]></Type>        
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764748221168</Id>
+					<Name><![CDATA[anio]]></Name>
+					<X>-230</X><Y>-290</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764748251151</Id>
+					<Name><![CDATA[tiempoSim]]></Name>
+					<X>-230</X><Y>-250</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[double]]></Type>        
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1764749065607</Id>
+					<Name><![CDATA[mes]]></Name>
+					<X>-230</X><Y>-320</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+					</Properties>
+				</Variable>
+			</Variables>
+			<AgentLinks>
+				<AgentLink>
+					<Id>1764748080668</Id>
+					<Name><![CDATA[connections]]></Name>
+					<X>50</X><Y>-50</Y>
+					<Label><X>15</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<HandleReceiveInConnections>false</HandleReceiveInConnections>
+					<AgentLinkType>COLLECTION_OF_LINKS</AgentLinkType>
+					<AgentLinkBidirectional>true</AgentLinkBidirectional>
+					<MessageType><![CDATA[Object]]></MessageType>
+					<LineStyle>SOLID</LineStyle>
+					<LineWidth>1</LineWidth>
+					<LineColor>-16777216</LineColor>
+					<LineZOrder>UNDER_AGENTS</LineZOrder>
+					<LineArrow>NONE</LineArrow>
+					<LineArrowPosition>END</LineArrowPosition>
+				</AgentLink>
+			</AgentLinks>
+
+
+			<Presentation>
+				<Level>
+					<Id>1764748080673</Id>
+					<Name><![CDATA[level]]></Name>
+					<X>0</X><Y>0</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<Z>0</Z>
+					<LevelVisibility>DIM_NON_CURRENT</LevelVisibility>
+
+
+				</Level>
+			</Presentation>
+
+		</ActiveObjectClass>
+	</ActiveObjectClasses>
+	<DifferentialEquationsMethod>EULER</DifferentialEquationsMethod>
+	<MixedEquationsMethod>RK45_NEWTON</MixedEquationsMethod>
+	<AlgebraicEquationsMethod>MODIFIED_NEWTON</AlgebraicEquationsMethod>
+	<AbsoluteAccuracy>1.0E-5</AbsoluteAccuracy>
+	<FixedTimeStep>0.001</FixedTimeStep>
+	<RelativeAccuracy>1.0E-5</RelativeAccuracy>
+	<TimeAccuracy>1.0E-5</TimeAccuracy>
+	<InspectionWindowColorTheme>DEFAULT</InspectionWindowColorTheme>
+	<Frame>
+		<Id>1762856276469</Id>
+		<Width>1000</Width>
+		<Height>600</Height>
+	</Frame>
+	<Database>
+		<Id>1762856276460</Id>
+		<Logging>false</Logging>
+		<AutoExport>false</AutoExport>
+		<ShutdownCompact>false</ShutdownCompact>
+		<ImportSettings>
+			<ExternalConnection>
+				<Id>1763401411063</Id>
+				<Name><![CDATA[database]]></Name>
+				<X>0</X><Y>0</Y>
+				<Label><X>10</X><Y>0</Y></Label>
+				<PublicFlag>false</PublicFlag>
+				<PresentationFlag>true</PresentationFlag>
+				<ShowLabel>true</ShowLabel>
+				<DatabaseType>EXCEL_ACCESS</DatabaseType>
+				<ConnectionURL><![CDATA[]]></ConnectionURL>
+				<ConnectOnStartup>true</ConnectOnStartup>
+				<DatabaseName><![CDATA[]]></DatabaseName>
+				<ResourceReference>
+					<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+					<ClassName><![CDATA[C:/Users/ferna/Downloads/municipios_anylogic.xlsx]]></ClassName>
+				</ResourceReference>
+				<Host><![CDATA[localhost]]></Host>
+				<JdbcDriverClassName><![CDATA[net.sourceforge.jtds.jdbc.Driver]]></JdbcDriverClassName>
+				<Login><![CDATA[]]></Login>
+				<Password><![CDATA[]]></Password>
+			</ExternalConnection>
+			<ExternalConnection>
+				<Id>1763887187649</Id>
+				<Name><![CDATA[database]]></Name>
+				<X>0</X><Y>0</Y>
+				<Label><X>10</X><Y>0</Y></Label>
+				<PublicFlag>false</PublicFlag>
+				<PresentationFlag>true</PresentationFlag>
+				<ShowLabel>true</ShowLabel>
+				<DatabaseType>EXCEL_ACCESS</DatabaseType>
+				<ConnectionURL><![CDATA[]]></ConnectionURL>
+				<ConnectOnStartup>true</ConnectOnStartup>
+				<DatabaseName><![CDATA[]]></DatabaseName>
+				<ResourceReference>
+					<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+					<ClassName><![CDATA[C:/Users/ferna/Downloads/construccion.xlsx]]></ClassName>
+				</ResourceReference>
+				<Host><![CDATA[localhost]]></Host>
+				<JdbcDriverClassName><![CDATA[net.sourceforge.jtds.jdbc.Driver]]></JdbcDriverClassName>
+				<Login><![CDATA[]]></Login>
+				<Password><![CDATA[]]></Password>
+			</ExternalConnection>
+			<ExternalConnection>
+				<Id>1763946126846</Id>
+				<Name><![CDATA[database]]></Name>
+				<X>0</X><Y>0</Y>
+				<Label><X>10</X><Y>0</Y></Label>
+				<PublicFlag>false</PublicFlag>
+				<PresentationFlag>true</PresentationFlag>
+				<ShowLabel>true</ShowLabel>
+				<DatabaseType>EXCEL_ACCESS</DatabaseType>
+				<ConnectionURL><![CDATA[]]></ConnectionURL>
+				<ConnectOnStartup>true</ConnectOnStartup>
+				<DatabaseName><![CDATA[]]></DatabaseName>
+				<ResourceReference>
+					<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+					<ClassName><![CDATA[C:/Users/ferna/Downloads/archivo_normalizado.xlsx]]></ClassName>
+				</ResourceReference>
+				<Host><![CDATA[localhost]]></Host>
+				<JdbcDriverClassName><![CDATA[net.sourceforge.jtds.jdbc.Driver]]></JdbcDriverClassName>
+				<Login><![CDATA[]]></Login>
+				<Password><![CDATA[]]></Password>
+			</ExternalConnection>
+			<TableImportSettings>
+				<Id>1763401414982</Id>
+				<TableReference>
+					<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+					<ClassName><![CDATA[municipios_anylogic]]></ClassName>
+				</TableReference>
+				<ConnectionIndex>0</ConnectionIndex>
+				<ExternalTableName><![CDATA["municipios_anylogic"]]></ExternalTableName>
+				<AutoImport>false</AutoImport>
+			</TableImportSettings>
+			<TableImportSettings>
+				<Id>1763887240203</Id>
+				<TableReference>
+					<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+					<ClassName><![CDATA[construccion]]></ClassName>
+				</TableReference>
+				<ConnectionIndex>1</ConnectionIndex>
+				<ExternalTableName><![CDATA["red"]]></ExternalTableName>
+				<AutoImport>false</AutoImport>
+			</TableImportSettings>
+			<TableImportSettings>
+				<Id>1763946154336</Id>
+				<TableReference>
+					<PackageName><![CDATA[criminalidadoaxacavallesc]]></PackageName>
+					<ClassName><![CDATA[datospoblacion]]></ClassName>
+				</TableReference>
+				<ConnectionIndex>2</ConnectionIndex>
+				<ExternalTableName><![CDATA["Sheet1"]]></ExternalTableName>
+				<AutoImport>false</AutoImport>
+			</TableImportSettings>
+		</ImportSettings>
+		<ExportSettings>
+		</ExportSettings>
+	</Database>
+
+	<RunConfiguration ActiveObjectClassId="1762856276607">
+		<Id>1762856276772</Id>
+		<Name><![CDATA[RunConfiguration]]></Name>
+		<MaximumMemory>512</MaximumMemory>
+		<ModelTimeProperties>
+			<StopOption><![CDATA[Stop at specified time]]></StopOption>
+			<InitialDate><![CDATA[1762819200000]]></InitialDate>	
+			<InitialTime><![CDATA[0.0]]></InitialTime>	
+			<FinalDate><![CDATA[1765411200000]]></FinalDate>	
+			<FinalTime><![CDATA[100.0]]></FinalTime>	
+		</ModelTimeProperties>
+		<AnimationProperties>
+			<StopNever>true</StopNever>
+			<ExecutionMode>realTimeScaled</ExecutionMode>
+			<RealTimeScale>1.0</RealTimeScale>
+			<EnableZoomAndPanning>true</EnableZoomAndPanning>
+			<EnableDeveloperPanel>false</EnableDeveloperPanel>
+			<ShowDeveloperPanelOnStart>false</ShowDeveloperPanelOnStart>
+		</AnimationProperties>
+		<Inputs>		
+		</Inputs>
+		<Outputs>
+		</Outputs>
+	</RunConfiguration>
+	<Experiments>
+		<!--   =========   Simulation Experiment   ========  -->
+		<SimulationExperiment ActiveObjectClassId="1762856276607">
+			<Id>1762856276742</Id>
+			<Name><![CDATA[Simulation]]></Name>
+			<CommandLineArguments><![CDATA[]]></CommandLineArguments>
+			<MaximumMemory>512</MaximumMemory>
+			<RandomNumberGenerationType>fixedSeed</RandomNumberGenerationType>
+			<CustomGeneratorCode>new Random()</CustomGeneratorCode>
+			<SeedValue>1</SeedValue>
+			<SelectionModeForSimultaneousEvents>LIFO</SelectionModeForSimultaneousEvents>
+			<VmArgs><![CDATA[]]></VmArgs>
+			<LoadRootFromSnapshot>false</LoadRootFromSnapshot>
+
+			<Presentation>
+				<Text>
+					<Id>1762856276770</Id>
+					<Name><![CDATA[text]]></Name>
+					<X>50</X><Y>30</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>true</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>false</ShowLabel>
+					<DrawMode>SHAPE_DRAW_2D3D</DrawMode>
+					<EmbeddedIcon>false</EmbeddedIcon>
+					<Z>0</Z>
+					<Rotation>0.0</Rotation>
+					<Color>-12490271</Color>
+					<Text><![CDATA[CriminalidadOaxacaVallesC]]></Text>
+					<Font>
+						<Name>SansSerif</Name>
+						<Size>24</Size>
+						<Style>0</Style>
+					</Font>
+					<Alignment>LEFT</Alignment>
+				</Text>
+			</Presentation>
+
+			<Parameters>
+			</Parameters>
+			<PresentationProperties>
+				<EnableZoomAndPanning>true</EnableZoomAndPanning>
+				<ExecutionMode><![CDATA[realTimeScaled]]></ExecutionMode>
+				<Title><![CDATA[CriminalidadOaxacaVallesC : Simulation]]></Title>
+				<EnableDeveloperPanel>true</EnableDeveloperPanel>
+				<ShowDeveloperPanelOnStart>false</ShowDeveloperPanelOnStart>
+				<RealTimeScale>1.0</RealTimeScale>
+			</PresentationProperties>
+			<ModelTimeProperties>
+				<StopOption><![CDATA[Never]]></StopOption>
+				<InitialDate><![CDATA[1762819200000]]></InitialDate>
+				<InitialTime><![CDATA[0.0]]></InitialTime>
+				<FinalDate><![CDATA[1765411200000]]></FinalDate>
+				<FinalTime><![CDATA[100.0]]></FinalTime>
+			</ModelTimeProperties>
+			<BypassInitialScreen>true</BypassInitialScreen>
+		</SimulationExperiment>	
+	</Experiments>
+	<ModelResources>
+		<Resource>
+			<Id>1763394092879</Id>
+			<Path><![CDATA[C:/Users/ferna/Downloads/municipios_anylogic.xlsx]]></Path>
+			<ReferencedFromUserCode>false</ReferencedFromUserCode>
+			<Location>FILE_SYSTEM</Location>
+		</Resource>
+		<Resource>
+			<Id>1763887240964</Id>
+			<Path><![CDATA[C:/Users/ferna/Downloads/construccion.xlsx]]></Path>
+			<ReferencedFromUserCode>false</ReferencedFromUserCode>
+			<Location>FILE_SYSTEM</Location>
+		</Resource>
+		<Resource>
+			<Id>1763946158556</Id>
+			<Path><![CDATA[C:/Users/ferna/Downloads/archivo_normalizado.xlsx]]></Path>
+			<ReferencedFromUserCode>false</ReferencedFromUserCode>
+			<Location>FILE_SYSTEM</Location>
+		</Resource>
+	</ModelResources>
+    <RequiredLibraryReference>
+		<LibraryName><![CDATA[com.anylogic.libraries.modules.markup_descriptors]]></LibraryName>
+		<VersionMajor>1</VersionMajor>
+		<VersionMinor>0</VersionMinor>
+		<VersionBuild>0</VersionBuild>
+    </RequiredLibraryReference>
+    <RequiredLibraryReference>
+		<LibraryName><![CDATA[com.anylogic.libraries.processmodeling]]></LibraryName>
+		<VersionMajor>8</VersionMajor>
+		<VersionMinor>0</VersionMinor>
+		<VersionBuild>5</VersionBuild>
+    </RequiredLibraryReference>
+    <RequiredLibraryReference>
+		<LibraryName><![CDATA[com.anylogic.libraries.processmodeling]]></LibraryName>
+		<VersionMajor>8</VersionMajor>
+		<VersionMinor>0</VersionMinor>
+		<VersionBuild>5</VersionBuild>
+    </RequiredLibraryReference>
+</Model>
+<ConvertersApplied>
+	<Uuid>9f7858c9-b2c8-4ead-9244-fd08833f642b</Uuid>
+	<Uuid>404652e6-561a-404c-aab2-ab7415f40ef5</Uuid>
+	<Uuid>6fd6cd57-6dfe-4fc6-be0b-c74065351957</Uuid>
+	<Uuid>3325dc48-3ad4-41e3-836f-dfd0e98fe1ed</Uuid>
+	<Uuid>3f69ef3d-706e-41a6-8af0-11658c5eef68</Uuid>
+	<Uuid>3f6fe405-e047-4304-91d6-6eee206d1106</Uuid>
+	<Uuid>820d2b51-5b4a-48e7-b0b6-e46418e3c0f2</Uuid>
+	<Uuid>630818fa-8975-4b70-976f-03180dce01db</Uuid>
+	<Uuid>7c7e471c-004e-495e-a4ad-d840620ab38e</Uuid>
+	<Uuid>3e38ff63-1f70-4ec0-b42c-e879b146785d</Uuid>
+	<Uuid>b1eb86e4-14b3-405c-8257-56b80f1b485d</Uuid>
+	<Uuid>d55f9fb6-86bb-45ea-9db1-79cecfa0ce91</Uuid>
+	<Uuid>ab77aafd-8f02-4354-b789-928d45b1f73c</Uuid>
+	<Uuid>e4f14fd7-1c4a-42e9-b91d-db2415f475db</Uuid>
+	<Uuid>6d208120-6c7a-45a6-b411-402f18890d9b</Uuid>
+	<Uuid>1816cdd0-177c-4973-9e88-dd8b95318556</Uuid>
+	<Uuid>5c23f62f-06dc-46ad-8ead-688ec434e3e5</Uuid>
+	<Uuid>5c7d7990-3f35-41eb-ae16-d0c16098acc6</Uuid>
+	<Uuid>02a16c52-a834-4f30-b6af-a6aee51a294e</Uuid>
+	<Uuid>f0988929-2718-4984-a1b6-c1f2ce152f1f</Uuid>
+	<Uuid>1c9d9cfe-ea2b-43f9-8f62-dc31d8ed3ae1</Uuid>
+	<Uuid>34cb742a-8ba4-47a7-87e6-f2685fe69e97</Uuid>
+	<Uuid>4fe10751-c399-4752-94b7-30113ad45070</Uuid>
+	<Uuid>c13fe5ac-6466-446e-886a-12df1431b1eb</Uuid>
+	<Uuid>714f9ca2-426e-4bff-8569-2d18f58fdcf8</Uuid>
+	<Uuid>045aeb5f-1087-4ac7-9702-a49404e7f7e8</Uuid>
+	<Uuid>840e9a0a-de98-4b7d-a172-f9bbda2d6b98</Uuid>
+	<Uuid>e342358b-75ed-4812-9376-6043fb6cb473</Uuid>
+	<Uuid>f3d5ccdc-1bb3-466f-871d-f6b92a26cbb4</Uuid>
+	<Uuid>59acb6fb-561c-4038-b722-a596a748b3c7</Uuid>
+	<Uuid>be7e6726-05c0-4228-821d-a8df91aeb5bc</Uuid>
+	<Uuid>df4a6a60-9ce8-4c6c-91c0-ad5a5d732259</Uuid>
+	<Uuid>47491eb9-4606-42bd-8399-125a2b95fded</Uuid>
+	<Uuid>9b2d1306-5d19-439a-8f2c-b144dd7e22fa</Uuid>
+	<Uuid>ef421152-8732-4f97-9acb-c8e9a6890d5e</Uuid>
+	<Uuid>d48f8080-25b1-44f5-8322-7bf2712ff974</Uuid>
+	<Uuid>6c4de826-daad-4cd4-b703-51dfe803e822</Uuid>
+	<Uuid>01af22d6-6889-4e98-a3df-e6eddc40fc92</Uuid>
+	<Uuid>ea3b3dbe-cca2-4bde-957b-feaef7e18789</Uuid>
+	<Uuid>e737c8c6-b526-4f88-b89e-554e205b0614</Uuid>
+	<Uuid>efd24e87-d7f7-425f-9cb0-3ee17c7b2116</Uuid>
+	<Uuid>a62607e6-047e-4910-a1ec-5426bf9283b5</Uuid>
+	<Uuid>64dceb5b-de05-47c7-8e40-e9b293e80d75</Uuid>
+	<Uuid>8d51c652-6aee-4de8-ba03-47b289a13ec5</Uuid>
+	<Uuid>51d7b5ce-5664-4750-b1a0-fabcdc31e49a</Uuid>
+	<Uuid>6522e3af-aa9e-421c-b667-e11db73cd8ca</Uuid>
+	<Uuid>9ac073a0-7abf-4dff-826f-9c44d4780590</Uuid>
+	<Uuid>2da9c21c-adc7-405a-a36e-46fbd9dfcd42</Uuid>
+	<Uuid>fe4d1053-9c84-4221-bac7-cb489a7064ff</Uuid>
+	<Uuid>1f005f88-e6d7-4bdc-81fa-3acf4c89cf64</Uuid>
+	<Uuid>42dc5a7c-d7b1-4653-92b9-9359b46cc2d4</Uuid>
+	<Uuid>e25721a9-34f9-479c-a4c3-31f5ec9e117d</Uuid>
+	<Uuid>506d1de3-06df-4131-9e88-e43f1768e3d8</Uuid>
+	<Uuid>e6625695-25a2-43d0-9056-1e9a1a594b1e</Uuid>
+	<Uuid>91990287-4edf-4e38-aa6c-66d0e906807b</Uuid>
+	<Uuid>2216cdd0-177c-5678-9e88-dd8b95312234</Uuid>
+	<Uuid>1737c8c6-b526-4dd8-589e-ee4e205b06f4</Uuid>
+	<Uuid>6a43bef6-8b70-4253-a828-82c3ab399655</Uuid>
+</ConvertersApplied>
+</AnyLogicWorkspace>
